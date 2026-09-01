@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FantaAsta Live — Cyberpunk Auction Suite Pro</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          base: '#06030e',
+          panel: '#0d071a',
+          card: '#140b28',
+          card2: '#1d1039',
+          edge: '#29184d',
+          edge2: '#3d2473',
+          carmi: { DEFAULT: '#f59e0b', light: '#fbbf24', dark: '#78350f', bg: '#451a03' },
+          tattico: { DEFAULT: '#06b6d4', light: '#22d3ee', dark: '#164e63', bg: '#083344' },
+          violet: { DEFAULT: '#8b5cf6', dim: '#6d28d9', bright: '#a78bfa' },
+          neon: { por: '#06b6d4', dif: '#10b981', cen: '#f59e0b', att: '#f43f5e', fucsia: '#d946ef', orange: '#f97316' },
+          gold: '#facc15',
+          goldBright: '#fef08a',
+        },
+        fontFamily: {
+          display: ['Orbitron', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+        boxShadow: {
+          glow: '0 0 30px -5px rgba(139,92,246,.55)',
+          'glow-sm': '0 0 14px -2px rgba(139,92,246,.45)',
+          'glow-gold': '0 0 24px 3px rgba(250,204,21,.7)',
+          'glow-carmi': '0 0 20px -2px rgba(245,158,11,.65)',
+          'glow-tattico': '0 0 20px -2px rgba(6,182,212,.65)',
+          'glow-emerald': '0 0 20px -2px rgba(16,185,129,.65)',
+          card: '0 8px 32px -6px rgba(0,0,0,.7)',
+        },
+        keyframes: {
+          popIn: { '0%': { opacity: 0, transform: 'scale(.94) translateY(6px)' }, '100%': { opacity: 1, transform: 'scale(1) translateY(0)' } },
+          toastIn: { '0%': { opacity: 0, transform: 'translateX(40px) scale(.95)' }, '100%': { opacity: 1, transform: 'translateX(0) scale(1)' } },
+          pulseGlow: { '0%,100%': { boxShadow: '0 0 0px rgba(139,92,246,0)' }, '50%': { boxShadow: '0 0 28px rgba(139,92,246,.7)' } },
+          burst: { '0%': { opacity: 1, transform: 'scale(.5) translateY(0)' }, '100%': { opacity: 0, transform: 'scale(2) translateY(-30px)' } },
+        },
+        animation: {
+          popIn: 'popIn .3s cubic-bezier(.16,1,.3,1)',
+          toastIn: 'toastIn .3s cubic-bezier(.16,1,.3,1)',
+          pulseGlow: 'pulseGlow 2s ease-in-out infinite',
+          burst: 'burst .75s ease-out forwards',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body {
+    background: radial-gradient(ellipse 120% 70% at 50% -10%, #1c0b3b 0%, #06030e 65%), #06030e;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(139,92,246,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,92,246,0.035) 1px, transparent 1px);
+    background-size: 38px 38px;
+  }
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: #0d071a; }
+  ::-webkit-scrollbar-thumb { background: #381f66; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
+  .glass { background: rgba(20, 11, 40, 0.75); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+</head>
+
+<body class="min-h-screen font-body text-slate-200 antialiased selection:bg-violet-500/40">
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 w-[350px] max-w-[90vw]"></div>
+
+  <!-- ================= BURST LAYER ================= -->
+  <div id="burstLayer" class="pointer-events-none fixed inset-0 z-[90] overflow-hidden"></div>
+
+  <!-- ================= HEADER / TOPBAR ================= -->
+  <header class="sticky top-0 z-40 glass border-b border-edge">
+    <div class="max-w-[1750px] mx-auto px-3 sm:px-6">
+      <div class="flex items-center justify-between h-16 gap-3">
+        
+        <!-- Brand & Loghi -->
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="flex items-center gap-2">
+            <img src="image/fantacalciologo.png" onerror="this.onerror=null; this.src='image/fantacalcio logo.png'; this.onerror=()=>this.style.display='none'" class="h-8 md:h-9 object-contain shrink-0" alt="Fanta" />
+            <img src="image/logoleghe.png" onerror="this.onerror=null; this.src='image/logoleghe.png'; this.onerror=()=>this.style.display='none'" class="h-7 md:h-8 object-contain hidden sm:block shrink-0" alt="Leghe" />
+          </div>
+          <div class="leading-tight">
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-display font-900 text-base sm:text-lg tracking-wide text-white">FANTA<span class="text-violet-bright">ASTA</span> LIVE</h1>
+              <img src="image/seriea.png" onerror="this.style.display='none'" class="h-5 w-5 object-contain shrink-0" alt="Serie A" />
+            </div>
+            <p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-mono hidden md:block">Doppia Visione Carmi &amp; Tattico</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs Desktop -->
+        <nav class="hidden lg:flex items-center gap-1 bg-panel/80 border border-edge rounded-xl p-1">
+          <button data-tab="asta" class="tab-btn active-tab px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">🎯 Tool Asta Live</button>
+          <button data-tab="tabellone" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">🏟️ Tabellone 10</button>
+          <button data-tab="griglia" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">📋 Griglia Fasce</button>
+          <button data-tab="budget" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">💰 Budget &amp; AI Slot</button>
+          <button data-tab="formazione" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">⚽ 11 Titolare</button>
+        </nav>
+
+        <!-- Pulsanti Header: Creator Vision + Lock Toggle + Reset -->
+        <div class="flex items-center gap-2.5">
+          
+          <!-- Selettore Visione Carmi / Tattico -->
+          <div class="flex items-center bg-panel border border-edge2 rounded-xl p-1 shadow-glow-sm">
+            <span class="text-[10px] uppercase font-mono text-slate-400 px-2 font-bold hidden sm:inline">Visione:</span>
+            <button id="visionCarmiBtn" class="vision-btn px-2.5 py-1 rounded-lg text-xs font-display font-700 transition-all bg-amber-500 text-slate-950 font-800 shadow-glow-carmi" data-vision="carmi">
+              🔥 CARMI
+            </button>
+            <button id="visionTatticoBtn" class="vision-btn px-2.5 py-1 rounded-lg text-xs font-display font-700 transition-all text-slate-400 hover:text-white" data-vision="tattico">
+              👔 TATTICO
+            </button>
+          </div>
+
+          <!-- Pulsante ON/OFF Blocco Prezzi per Asta Live -->
+          <button id="togglePriceLockBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all bg-card2 border-edge text-slate-200 hover:border-violet-400" title="Attiva/Disattiva la modalità blocco per evitare modifiche involontarie ai prezzi durante l'asta">
+            <span id="priceLockIcon">🔒</span>
+            <span id="priceLockLabel" class="hidden sm:inline">Prezzi: Bloccati</span>
+          </button>
+
+          <!-- Reset Prezzi e Asta -->
+          <button id="resetCustomPricesBtn" title="Ripristina i prezzi originali dei listini" class="text-xs px-2.5 py-1.5 rounded-lg border border-edge bg-card2 text-slate-300 hover:text-amber-400 hover:border-amber-500/50 transition-colors">
+            ⚡ Reset Prezzi
+          </button>
+
+          <button id="resetBtn" title="Azzera intera asta" class="text-xs px-2.5 py-1.5 rounded-lg border border-edge text-slate-400 hover:text-rose-400 hover:border-rose-500/40 transition-colors">
+            ↺ Reset Asta
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <div class="flex lg:hidden items-center gap-1 bg-panel/90 border border-edge rounded-xl p-1 mb-2.5 overflow-x-auto no-scrollbar">
+        <button data-tab="asta" class="tab-btn active-tab flex-1 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold">🎯 Asta</button>
+        <button data-tab="tabellone" class="tab-btn flex-1 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold">🏟️ Tabellone</button>
+        <button data-tab="griglia" class="tab-btn flex-1 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold">📋 Fasce</button>
+        <button data-tab="budget" class="tab-btn flex-1 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold">💰 Budget</button>
+        <button data-tab="formazione" class="tab-btn flex-1 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold">⚽ 11</button>
+      </div>
+    </div>
+
+    <!-- Status Sub-header -->
+    <div class="border-t border-edge/60 bg-base/60">
+      <div class="max-w-[1750px] mx-auto px-4 sm:px-6 py-1 flex items-center justify-between gap-4 text-[11px] font-mono text-slate-400 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-3 shrink-0">
+          <span>Giocatori assegnati: <b id="statAssigned" class="text-violet-bright">0</b>/<span id="statTotal">0</span></span>
+          <span class="w-px h-3 bg-edge"></span>
+          <span>Crediti circolati: 🪙 <b id="statCreditsSpent" class="text-gold">0</b> / 5000</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="activeVisionTag" class="text-[10px] px-2 py-0.5 rounded font-display font-800 bg-amber-500/20 text-amber-300 border border-amber-500/40">VISIONE: CARMI</span>
+          <span id="dataStatus" class="text-slate-500 text-[10px]">Caricamento listini in corso…</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN APP ================= -->
+  <main class="max-w-[1750px] mx-auto px-3 sm:px-6 py-5">
+
+    <!-- ======================================================= -->
+    <!-- TAB 1: TOOL ASTA LIVE -->
+    <!-- ======================================================= -->
+    <section id="tab-asta" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      
+      <!-- SINISTRA: Ricerca e Card Giocatore con Doppia Visione + Titolarità/Integrità + Note -->
+      <div class="lg:col-span-8 space-y-4">
+        
+        <!-- Search Box -->
+        <div class="glass border border-edge rounded-2xl p-4 shadow-card relative">
+          <label class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center justify-between">
+            <span>🔍 Cerca e Chiama Giocatore</span>
+            <span class="text-slate-500 text-[11px] font-mono">Premi <kbd class="px-1.5 py-0.5 rounded bg-card2 border border-edge text-slate-300 font-bold">/</kbd> per cercare</span>
+          </label>
+          <div class="mt-2 relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">⚡</span>
+            <input id="searchInput" type="text" autocomplete="off" placeholder="Digita nome o squadra… (es. Malen, Inter, Nico Paz, Scamacca)"
+              class="w-full bg-card border border-edge focus:border-violet rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 transition-colors font-medium shadow-inner" />
+          </div>
+          <div id="searchResults" class="hidden mt-2 max-h-80 overflow-y-auto rounded-xl border border-edge2 divide-y divide-edge/60 bg-card2 z-50"></div>
+        </div>
+
+        <!-- Scheda Giocatore Attivo (DOPPIA VISIONE SIMULTANEA + NOTE + INDICI) -->
+        <div id="playerDetail" class="hidden glass border border-edge rounded-2xl p-5 shadow-card animate-popIn"></div>
+
+        <!-- Empty State Scheda -->
+        <div id="playerEmptyState" class="glass border border-dashed border-edge2 rounded-2xl p-12 text-center text-slate-500">
+          <div class="text-5xl mb-3 animate-pulse">🎙️</div>
+          <h3 class="font-display font-700 text-base text-slate-300">Nessun giocatore sul banco dell'asta</h3>
+          <p class="text-xs mt-1 text-slate-500">Cerca un calciatore sopra oppure esplora la <button class="griglia-link text-violet-bright underline underline-offset-2 hover:text-white font-semibold">Griglia Fasce</button>.</p>
+        </div>
+      </div>
+
+      <!-- DESTRA: Rosa Mia Squadra + Strategia Attiva Reparto + Mini-Classifica 10 Squadre -->
+      <div class="lg:col-span-4 space-y-4">
+        <!-- Pannello Strategia Attiva & Alert Sforamento -->
+        <div id="activeStrategyAlertBox" class="glass border border-edge rounded-2xl p-4 shadow-card space-y-3"></div>
+        <!-- Mia Squadra -->
+        <div id="mySquadPanel" class="space-y-4"></div>
+        <!-- Mini Classifica Crediti -->
+        <div id="miniLeaderboardCard" class="glass border border-edge rounded-2xl p-4 shadow-card"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- TAB 2: TABELLONE COMPATTO 10 SQUADRE (ACCORDION UPWARD) -->
+    <!-- ======================================================= -->
+    <section id="tab-tabellone" class="tab-panel hidden space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 class="font-display font-800 text-xl text-white flex items-center gap-2">
+            <span>🏟️</span> TABELLONE ASTA (10 SQUADRE)
+          </h2>
+          <p class="text-xs text-slate-400">Layout compatto a cascata fluida · Chiusura automatica dei vuoti e compattamento verso l'alto</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="expandAllAccordionBtn" class="text-xs px-3 py-1.5 rounded-lg bg-card2 border border-edge hover:border-violet text-slate-300 transition-colors">Espandi tutti</button>
+          <button id="collapseAllAccordionBtn" class="text-xs px-3 py-1.5 rounded-lg bg-card2 border border-edge hover:border-violet text-slate-300 transition-colors">Comprimi tutti</button>
+        </div>
+      </div>
+
+      <div id="tabelloneOverview"></div>
+      <!-- Griglia 10 Squadre con items-start per compattamento immediato -->
+      <div id="tabelloneGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 items-start"></div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- TAB 3: GRIGLIA FASCE & CONFRONTO INCROCIATO 2 COLONNE -->
+    <!-- ======================================================= -->
+    <section id="tab-griglia" class="tab-panel hidden space-y-4">
+      
+      <!-- Toolbar Filtri, Ricerca & Ordinamento -->
+      <div class="glass border border-edge rounded-2xl p-4 shadow-card sticky top-20 z-30 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          <!-- Ricerca Listone -->
+          <div class="relative flex-1">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+            <input id="listSearch" type="text" placeholder="Filtra per nome o club nella griglia…"
+              class="w-full bg-card border border-edge focus:border-violet rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-600" />
+          </div>
+
+          <!-- Pulsanti Switch & Visione Incrociata -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center bg-card2 border border-edge2 rounded-xl p-1">
+              <span class="text-[10px] uppercase font-mono text-slate-400 px-2 font-bold">Listino Guida:</span>
+              <button class="vision-grid-btn px-2.5 py-1 rounded-lg text-xs font-display font-800 bg-amber-500 text-slate-950" data-vision="carmi">Carmi</button>
+              <button class="vision-grid-btn px-2.5 py-1 rounded-lg text-xs font-display font-800 text-slate-400" data-vision="tattico">Tattico</button>
+            </div>
+
+            <!-- Solo Preferiti -->
+            <button id="favToggle" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-edge text-xs font-semibold text-slate-300 hover:border-gold hover:text-gold transition-colors whitespace-nowrap bg-card">
+              <span id="favToggleIcon" class="text-sm">☆</span> Solo Preferiti
+            </button>
+
+            <!-- Ordinamento (Include Titolarità) -->
+            <select id="sortSelect" class="bg-card border border-edge rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 focus:border-violet">
+              <option value="price_desc">Ordina: Prezzo 🪙 ↓</option>
+              <option value="price_asc">Ordina: Prezzo 🪙 ↑</option>
+              <option value="tit_desc">Ordina: Titolarità % ↓</option>
+              <option value="tit_asc">Ordina: Titolarità % ↑</option>
+              <option value="fmv_desc">Ordina: Fantamedia ↓</option>
+              <option value="name_asc">Ordina: Nome A-Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtri Ruolo -->
+        <div class="flex flex-wrap gap-2 pt-1 border-t border-edge/60">
+          <button data-role-filter="ALL" class="role-filter-btn active-filter px-3.5 py-1.5 rounded-full text-xs font-display font-700 border transition-all">TUTTI</button>
+          <button data-role-filter="P" class="role-filter-btn px-3.5 py-1.5 rounded-full text-xs font-display font-700 border transition-all text-neon-por">PORTIERI</button>
+          <button data-role-filter="D" class="role-filter-btn px-3.5 py-1.5 rounded-full text-xs font-display font-700 border transition-all text-neon-dif">DIFENSORI</button>
+          <button data-role-filter="C" class="role-filter-btn px-3.5 py-1.5 rounded-full text-xs font-display font-700 border transition-all text-neon-cen">CENTROCAMPISTI</button>
+          <button data-role-filter="A" class="role-filter-btn px-3.5 py-1.5 rounded-full text-xs font-display font-700 border transition-all text-neon-att">ATTACCANTI</button>
+        </div>
+      </div>
+
+      <!-- Header Esplicativo & Legenda Guida Griglia -->
+      <div id="grigliaLegendBanner" class="glass border border-edge rounded-2xl p-4 shadow-card">
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-display font-800 text-sm text-white">📊 LEGENDA COMPARATIVA RAPIDA:</span>
+            <span class="text-slate-400">Ogni card mostra i prezzi di <b>entrambi</b> i creator con % Titolarità e prezzo medio d'asta previsto.</span>
+          </div>
+          <div class="flex items-center gap-3 font-mono text-[11px] flex-wrap">
+            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">🔥 CARMI</span>
+            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">👔 TATTICO</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🛡️ TITOLARITÀ %</span>
+            <span class="px-2 py-0.5 rounded bg-card2 text-slate-200 border border-edge">📊 M.ASTA PMAA</span>
+            <span class="px-2 py-0.5 rounded bg-violet-900/40 text-violet-300 border border-violet-500/40">📝 NOTE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container Griglia Fasce -->
+      <div id="listoneContainer" class="space-y-6"></div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- TAB 4: GESTIONE BUDGET & STRATEGIE SLOT PER REPARTO -->
+    <!-- ======================================================= -->
+    <section id="tab-budget" class="tab-panel hidden space-y-5">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 class="font-display font-800 text-xl text-white flex items-center gap-2">
+            <span>💰</span> GESTIONE BUDGET &amp; STRATEGIE AVANZATE PER SLOT
+          </h2>
+          <p class="text-xs text-slate-400">Crea e confronta strategie personalizzate assegnando il tetto di spesa per ogni singolo slot di ciascun reparto</p>
+        </div>
+        <select id="budgetTeamSelect" class="bg-card border border-edge rounded-xl px-3 py-2 text-xs font-bold text-slate-200"></select>
+      </div>
+
+      <!-- PARTE SUPERIORE: Ripartizione Macro & Torta & Spesa Reale -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-4 glass border border-edge rounded-2xl p-5 shadow-card space-y-4" id="budgetTargetsCard"></div>
+        <div class="lg:col-span-4 glass border border-edge rounded-2xl p-5 shadow-card flex flex-col justify-between" id="budgetPieBox"></div>
+        <div class="lg:col-span-4 space-y-4">
+          <div class="glass border border-edge rounded-2xl p-5 shadow-card" id="budgetRealCard"></div>
+          <div class="glass border border-violet-500/40 rounded-2xl p-4 shadow-glow-sm" id="strategyAdvisorBox"></div>
+        </div>
+      </div>
+
+      <!-- PARTE INFERIORE: Gestore Strategie Personalizzate per Singolo Slot -->
+      <div class="glass border-2 border-violet-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-edge pb-4">
+          <div>
+            <h3 class="font-display font-900 text-base sm:text-lg text-white flex items-center gap-2">
+              <span>🎯</span> PIANIFICATORE STRATEGIE SLOT PER REPARTO
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Definisci l'allocazione crediti precisa per ogni slot e monitora gli scostamenti in tempo reale durante l'asta</p>
+          </div>
+          
+          <!-- Selettore Reparto per la Gestione Strategia -->
+          <div class="flex items-center gap-1.5 bg-card2 p-1 rounded-xl border border-edge">
+            <button data-strat-role="P" class="strat-role-btn active-strat-role px-3 py-1 rounded-lg text-xs font-display font-800 bg-cyan-500 text-slate-950">POR (3)</button>
+            <button data-strat-role="D" class="strat-role-btn px-3 py-1 rounded-lg text-xs font-display font-800 text-slate-400 hover:text-white">DIF (8)</button>
+            <button data-strat-role="C" class="strat-role-btn px-3 py-1 rounded-lg text-xs font-display font-800 text-slate-400 hover:text-white">CEN (8)</button>
+            <button data-strat-role="A" class="strat-role-btn px-3 py-1 rounded-lg text-xs font-display font-800 text-slate-400 hover:text-white">ATT (6)</button>
+          </div>
+        </div>
+
+        <!-- Contenuto Gestore Strategia Reparto Selezionato -->
+        <div id="slotStrategyManagerContent" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- TAB 5: GENERATORE 11 TITOLARE -->
+    <!-- ======================================================= -->
+    <section id="tab-formazione" class="tab-panel hidden space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 class="font-display font-800 text-xl text-white flex items-center gap-2">
+            <span>⚽</span> GENERATORE 11 TITOLARE
+          </h2>
+          <p class="text-xs text-slate-400">Schieramento ottimale per Fantamedia e titolarità (Desktop &amp; iPad ready)</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="formTeamSelect" class="bg-card border border-edge rounded-xl px-3 py-2 text-xs font-bold text-slate-200"></select>
+          <select id="formModuleSelect" class="bg-card border border-edge rounded-xl px-3 py-2 text-xs font-bold text-slate-200"></select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 items-start">
+        <div id="pitchContainer"></div>
+        <div id="formazioneSummary" class="space-y-4"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="max-w-[1750px] mx-auto px-4 py-6 border-t border-edge/40 text-center text-xs text-slate-600 font-mono">
+    FantaAsta Live · Supporto nativo listini Carmi &amp; Tattico · Salvataggio automatico in LocalStorage
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
